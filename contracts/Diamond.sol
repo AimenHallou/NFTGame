@@ -10,7 +10,7 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     // Setting contract addresses
 
     address minerAddress;
-    address controllerAddress;
+    address mineAddress;
     address vaultAddress;
     address upgradeAddress;
 
@@ -22,8 +22,8 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
         minerAddress = _minerAddress;
     }
 
-    function setControllerAddress(address _controllerAddress) external onlyOwner{
-        controllerAddress = _controllerAddress;
+    function setMineAddress(address _mineAddress) external onlyOwner{
+        mineAddress = _mineAddress;
     }
 
     function setvaultAddress(address _vaultAddress) external onlyOwner{

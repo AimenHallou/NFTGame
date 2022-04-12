@@ -71,5 +71,47 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable, Pausable {
         diamond.safeTransfer(_msgSender(), output);
     }
 
+    function prepareDelayedUnstake(uint256 _share) external whenNotPaused {
+        // calculate output and burn staker's share
+        uint256 output = _unstakeOutput(_share); //converts sdiamond values to diamond
+        _burn(_msgSender(), _share);
+
+        // calculate and burn amount of output spoiled
+        uint256 amountSpoiled = output.mul(DELAYED_UNSTAKE_BURN_PERCENT).div(100);
+
+        // remove amountSpoiled from output
+        output -= amountSpoiled;
+
+        unlockAmounts[_msgSender()] += output;
+        unlockTimestamps[_msgSender()] = block.timestamp + DELAYED_UNSTAKE_LOCKUP_PERIOD;
+        storedDiamond += output;
+
+        diamond.burn(address(this), amountSpoiled);
+    }
     
+    function claimDelayedUnstake(uint256 _amount) external whenNotPaused {
+        require(block.timestamp >= unlockTimestamps[_msgSender()], "DIAMONDS not yet unlocked");
+        require(_amount <= unlockAmounts[_msgSender()], "insufficient locked balance");
+
+        // deduct from unlocked
+        unlockAmounts[_msgSender()] -= _amount;
+
+        storedDiamond -= _amount;
+
+        // transfer claim
+        diamond.safeTransfer(_msgSender(), _amount);
+    }
+
+    //  Admin
+
+    function stakeStarted() public view returns (bool) {
+        return stakeTime != 0 && block.timestamp >= stakeTime;
+    }
+
+    function setStakeStartTime(uint256 _startTime) external onlyOwner {
+        require (_startTime >= block.timestamp, "startTime cannot be in the past");
+        require(!stakeStarted(), "staking already started");
+        stakeTime = _startTime;
+    }
+
 }
