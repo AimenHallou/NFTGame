@@ -3,10 +3,10 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-
-import"./Diamond.sol";
-import"./Miner.sol";
+import "./Diamond.sol";
+import "./Miner.sol";
 
 contract Mine is Ownable {
     using SafeMath for uint256;
@@ -79,7 +79,7 @@ contract Mine is Ownable {
         if (checkOwnership) {
             require(stake.owner == _msgSender(), "You don't own this token");
         }
-        return (block.timestamp - stake.startTimestamp) * baker.tokenYield(_tokenId) * YIELD_CPS;
+        return (block.timestamp - stake.startTimestamp) * miner.tokenYield(_tokenId) * YIELD_CPS;
     }
 
     // Mutators
@@ -115,8 +115,8 @@ contract Mine is Ownable {
             }
         }
 
-        diamonds.mint(_msgSender(), totalClaimed);
-        diamonds.mint(vaultAddress, totalTaxed);
+        diamond.mint(_msgSender(), totalClaimed);
+        diamond.mint(vaultAddress, totalTaxed);
     }
 
     function withdrawMiner(uint256[] calldata _tokenIds) external {

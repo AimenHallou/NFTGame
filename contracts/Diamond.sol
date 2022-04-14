@@ -12,38 +12,38 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     address minerAddress;
     address mineAddress;
     address vaultAddress;
-    address upgradeAddress;
+
+    constructor(address _vaultAddress){
+        vaultAddress = _vaultAddress;
+    }
 
     //  Admin
 
     //  Setters
 
-    function setMinerAddress(address _minerAddress) external onlyOwner{
-        minerAddress = _minerAddress;
-    }
-
-    function setMineAddress(address _mineAddress) external onlyOwner{
+    function setMineAddress(address _mineAddress) external onlyOwner {
+        require(address(mineAddress) == address(0), "Mine address already set");
         mineAddress = _mineAddress;
     }
 
-    function setvaultAddress(address _vaultAddress) external onlyOwner{
-        vaultAddress = _vaultAddress;
+    function setMinerAddress(address _minerAddress) external onlyOwner {
+        require(address(minerAddress) == address(0), "Miner address already set");
+        minerAddress = _minerAddress;
     }
 
-    function setUpgradeAddress(address _upgradeAddress) external onlyOwner{
-        upgradeAddress = _upgradeAddress;
+    function mint(address _to, uint256 _amount) external {
+        require(_msgSender() == minerAddress, "Only the Mine contract can mint");
+        _mint(_to, _amount);
     }
 
-    function transferToVault(address _from, uint256 _amount) external{
-        require(vaultAddress != address(0), "missing initial requirements");
-        require(_msgSender() == vaultAddress, "only the vault contract can call transferToVault");
+    function burn(address _from, uint256 _amount) external {
+        require(_msgSender() == minerAddress, "Only the Miner contract can burn");
+        _burn(_from, _amount);
+    }
+
+    function transferToVault(address _from, uint256 _amount) external {
+        require(_msgSender() == vaultAddress, "Only the Vault contract can call transferToVault");
         _transfer(_from, vaultAddress, _amount);
-    }
-
-    function transferForUpgradeFees(address _from, uint256 _amount) external {
-        require(upgradeAddress != address(0), "missing initial requirements");
-        require(_msgSender() == upgradeAddress, "only the upgrade contract can call transferForUpgradeFees");
-        _transfer(_from, upgradeAddress, _amount);
     }
 
 }
