@@ -71,7 +71,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         require(msg.value == _numTokens * PRESALE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
         require(presaleOpen(), "The presale is not open");
         require(presaleSupply + _numTokens <= MAX_PRESALE_SUPPLY, "Insufficient presale supply");
-        require(msg.sender == )
+        require(isWhiteListed(_msgSender()), "The sender is not whitelisted");
 
         _mintBaseTokens(_numTokens, _msgSender());
         presaleSupply += _numTokens;
@@ -121,6 +121,15 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     function whiteListUsers (address[] calldata _users) public onlyOwner{
         delete whiteListAddresses;
         whiteListAddresses = _users;
+    }
+
+    function isWhiteListed (address _user) public view returns (bool) {
+        for(i=0; i<whiteListAddresses.length; i++){
+            if(whiteListAddresses[i] == _user){
+                return true;
+            }
+        }
+        return false;
     }
 
     /* Minting of upgrade miners */
