@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-import "./Diamond.sol";
+//import "./Diamond.sol";
 
 
 contract Miner is ERC721Enumerable, Ownable, Pausable {
@@ -26,7 +26,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         bool revealed;
     }
 
-    Diamond public diamond;
+    //Diamond public diamond;
     address public mineAddress;
     address[] public whiteListAddresses;
 
@@ -55,7 +55,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         // supply and price are ignored for the base levels of miners and super miners
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 1 }));
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 25 }));
-        _mintBaseTokens(5,msg.sender);
+        //_mintBaseTokens(5, msg.sender);
     }
 
     /* Minting of base miners */
@@ -124,7 +124,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     function isWhiteListed (address _user) public view returns (bool) {
-        for(i=0; i<whiteListAddresses.length; i++){
+        for(uint256 i=0; i<whiteListAddresses.length; i++){
             if(whiteListAddresses[i] == _user){
                 return true;
             }
@@ -138,24 +138,24 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         levels.push(Level({ supply: 0, maxSupply: _maxSupply, price: _price, yield: _yield }));
     }
 
-    function mintUpgrade(uint256 _level, uint16 _numTokens) external {
-        require(gameStarted(), "Upgrade sales are not open");
-        require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
-        require(_level < levels.length && _level > 1, "Invalid level");
-        require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
+    // function mintUpgrade(uint256 _level, uint16 _numTokens) external {
+    //     require(gameStarted(), "Upgrade sales are not open");
+    //     require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
+    //     require(_level < levels.length && _level > 1, "Invalid level");
+    //     require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
 
-        uint256 totalCost = _numTokens * levels[_level].price;
-        require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
-        diamond.burn(msg.sender, totalCost);
+    //     uint256 totalCost = _numTokens * levels[_level].price;
+    //     require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
+    //     diamond.burn(msg.sender, totalCost);
 
-        for (uint256 i = 0; i < _numTokens; i++) {
-            uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
-            _safeMint(msg.sender, tokenId);
-            tokenLevel[tokenId] = _level;
-            levels[_level].supply++;
-            upgradeSupply++;
-        }
-    }
+    //     for (uint256 i = 0; i < _numTokens; i++) {
+    //         uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
+    //         _safeMint(msg.sender, tokenId);
+    //         tokenLevel[tokenId] = _level;
+    //         levels[_level].supply++;
+    //         upgradeSupply++;
+    //     }
+    // }
 
     //  Views
 
@@ -184,6 +184,10 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     function tokenYield(uint256 _tokenId) public view returns (uint256) {
         uint256 level = revealedTokenLevel(_tokenId);
         return levels[level].yield;
+    }
+
+    function getWhiteList() public view returns (address[] memory){
+        return whiteListAddresses;
     }
 
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
@@ -250,9 +254,9 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         mineAddress = _mineAddress;
     }
 
-    function setDiamond(Diamond _diamond) external onlyOwner {
-        diamond = _diamond;
-    }
+    // function setDiamond(Diamond _diamond) external onlyOwner {
+    //     diamond = _diamond;
+    // }
 
     function withdrawBalance(uint256 _amount) external onlyOwner {
         require(_amount <= address(this).balance);
