@@ -28,12 +28,14 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
 
     Diamond public diamond;
     address public mineAddress;
+    address[] public whiteListAddresses;
 
     uint256 public constant MAX_PER_MINT = 30;
     uint256 public constant MAX_BASE_SUPPLY = 10000;
     uint256 public constant MAX_PRESALE_SUPPLY = 500;
     uint256 public constant BASE_MINT_PRICE = 1.5 ether; // 1.5 AVAX
     uint256 public constant PRESALE_MINT_PRICE = 1.25 ether; // 1.25 AVAX
+    uint256 public constant NFT_TAX = 0.1 ether; // 0.1 AVAX
     uint256 public constant BASE_SUPER_PERCENTAGE = 5;
     uint256 public constant UPGRADE_SALES_OFFSET = 2 days;
 
@@ -59,23 +61,20 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     /* Minting of base miners */
 
     function mintBase(uint16 _numTokens) external payable {
-        require(msg.value == _numTokens * BASE_MINT_PRICE, "Incorrect amount sent");
+        require(msg.value == _numTokens * BASE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
         require(baseSalesOpen(), "The main sale period is not open");
 
         _mintBaseTokens(_numTokens, _msgSender());
     }
 
     function presaleMintBase(uint16 _numTokens) external payable {
-        require(msg.value == _numTokens * PRESALE_MINT_PRICE, "Incorrect amount sent");
+        require(msg.value == _numTokens * PRESALE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
         require(presaleOpen(), "The presale is not open");
         require(presaleSupply + _numTokens <= MAX_PRESALE_SUPPLY, "Insufficient presale supply");
+        require(msg.sender == )
 
         _mintBaseTokens(_numTokens, _msgSender());
         presaleSupply += _numTokens;
-    }
-
-    function reserveBase(uint16 _numTokens, address _for) external onlyOwner {
-        _mintBaseTokens(_numTokens, _for);
     }
 
     function setSalesStartTime(uint256 _startTime) external onlyOwner {
@@ -117,6 +116,11 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
                 tokenLevel[tokenId] = 0; // normal miner
             }
         }
+    }
+
+    function whiteListUsers (address[] calldata _users) public onlyOwner{
+        delete whiteListAddresses;
+        whiteListAddresses = _users;
     }
 
     /* Minting of upgrade miners */
