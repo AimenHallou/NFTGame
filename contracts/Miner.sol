@@ -53,6 +53,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         // supply and price are ignored for the base levels of miners and super miners
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 1 }));
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 25 }));
+        _mintBaseTokens(5,msg.sender);
     }
 
     /* Minting of base miners */
