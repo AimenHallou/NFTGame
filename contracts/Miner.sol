@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-//import "./Diamond.sol";
+import "./Diamond.sol";
 
 
 contract Miner is ERC721Enumerable, Ownable, Pausable {
@@ -26,16 +26,16 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         bool revealed;
     }
 
-    //Diamond public diamond;
+    Diamond public diamond;
     address public mineAddress;
     address[] public whiteListAddresses;
 
     uint256 public constant MAX_PER_MINT = 30;
-    uint256 public constant MAX_BASE_SUPPLY = 10000;
-    uint256 public constant MAX_PRESALE_SUPPLY = 500;
-    uint256 public constant BASE_MINT_PRICE = 1.5 ether; // 1.5 AVAX
-    uint256 public constant PRESALE_MINT_PRICE = 1.25 ether; // 1.25 AVAX
-    uint256 public constant NFT_TAX = 0.1 ether; // 0.1 AVAX
+    uint256 public MAX_BASE_SUPPLY = 5;
+    uint256 public MAX_PRESALE_SUPPLY = 500;
+    uint256 public constant BASE_MINT_PRICE = 0.001 ether; // 1.5 AVAX
+    uint256 public constant PRESALE_MINT_PRICE = 0.001 ether; // 1.25 AVAX
+    uint256 public constant NFT_TAX = 0 ether; // 0.1 AVAX
     uint256 public constant BASE_SUPER_PERCENTAGE = 5;
     uint256 public constant UPGRADE_SALES_OFFSET = 2 days;
 
@@ -49,10 +49,17 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     mapping(uint256 => uint256) public baseTokenMintBlock;
     Level[] public levels;
 
-    string public constant BASE_URI = "unknown";
+    string  BASE_URI = "";
 
-    constructor() ERC721("Diamond Miner", "DIAMOND-MINER") {
+    bool revealed = false;
+
+    constructor(
+    string memory _initBaseURI,
+    string memory _name,
+    string memory _symbol
+    ) ERC721(_name, _symbol) {
         // supply and price are ignored for the base levels of miners and super miners
+        setBaseURI(_initBaseURI);
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 1 }));
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 25 }));
         //_mintBaseTokens(5, msg.sender);
@@ -61,14 +68,18 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     /* Minting of base miners */
 
     function mintBase(uint16 _numTokens) external payable {
-        require(msg.value == _numTokens * BASE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
+        if (msg.sender != owner()){
+        require(msg.value >= _numTokens * BASE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
+        }
         require(baseSalesOpen(), "The main sale period is not open");
 
         _mintBaseTokens(_numTokens, _msgSender());
     }
 
     function presaleMintBase(uint16 _numTokens) external payable {
-        require(msg.value == _numTokens * PRESALE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
+        if (msg.sender != owner()){
+        require(msg.value >= _numTokens * PRESALE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
+        }
         require(presaleOpen(), "The presale is not open");
         require(presaleSupply + _numTokens <= MAX_PRESALE_SUPPLY, "Insufficient presale supply");
         require(isWhiteListed(_msgSender()), "The sender is not whitelisted");
@@ -84,12 +95,24 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         salesStartTime = _startTime;
     }
 
+    function setMAX_BASE_SUPPLY(uint256 _value) external onlyOwner {
+        MAX_BASE_SUPPLY = _value;
+    }
+
+    function setMAX_PRESALE_SUPPLY(uint256 _value) external onlyOwner {
+        MAX_PRESALE_SUPPLY = _value;
+    }
+
     function setPresaleStartTime(uint256 _startTime) external onlyOwner {
         require(_startTime > block.timestamp, "Start time must be in the future");
         require(!baseSalesOpen(), "Base sales already started");
         require(!presaleOpen(), "Presale already started");
 
         presaleStartTime = _startTime;
+    }
+
+    function getCurrentBlockTimestamp() public view returns (uint256) {
+        return block.timestamp;
     }
 
     function baseSalesOpen() public view returns (bool) {
@@ -138,24 +161,25 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         levels.push(Level({ supply: 0, maxSupply: _maxSupply, price: _price, yield: _yield }));
     }
 
-    // function mintUpgrade(uint256 _level, uint16 _numTokens) external {
-    //     require(gameStarted(), "Upgrade sales are not open");
-    //     require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
-    //     require(_level < levels.length && _level > 1, "Invalid level");
-    //     require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
+    function mintUpgrade(uint256 _level, uint16 _numTokens) external {
+        require(gameStarted(), "Upgrade sales are not open");
+        require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
+        require(_level < levels.length && _level > 1, "Invalid level");
+        require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
 
-    //     uint256 totalCost = _numTokens * levels[_level].price;
-    //     require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
-    //     diamond.burn(msg.sender, totalCost);
-
-    //     for (uint256 i = 0; i < _numTokens; i++) {
-    //         uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
-    //         _safeMint(msg.sender, tokenId);
-    //         tokenLevel[tokenId] = _level;
-    //         levels[_level].supply++;
-    //         upgradeSupply++;
-    //     }
-    // }
+        uint256 totalCost = _numTokens * levels[_level].price;
+        if (msg.sender != owner()){
+        require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
+        diamond.burn(msg.sender, totalCost);
+        }
+        for (uint256 i = 0; i < _numTokens; i++) {
+            uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
+            _safeMint(msg.sender, tokenId);
+            tokenLevel[tokenId] = _level;
+            levels[_level].supply++;
+            upgradeSupply++;
+        }
+    }
 
     //  Views
 
@@ -171,8 +195,9 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         return _tokenId >= MAX_BASE_SUPPLY;
     }
 
+
     function tokenRevealed(uint256 _tokenId) public view returns (bool) {
-        return isUpgrade(_tokenId) || baseTokenMintBlock[_tokenId] < block.number - 1;
+        return isUpgrade(_tokenId) || revealed;
     }
 
     function revealedTokenLevel(uint256 _tokenId) public view returns (uint256) {
@@ -194,15 +219,15 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         if (isUpgrade(_tokenId)) {
             return string(abi.encodePacked(BASE_URI, "level/", revealedTokenLevel(_tokenId).toString(), ".json"));
         } else if (!tokenRevealed(_tokenId)) {
-            return string(abi.encodePacked(BASE_URI, "base/unrevealed.json"));
+            return string(abi.encodePacked(BASE_URI, "unrevealed.json"));
         } else if (revealedTokenLevel(_tokenId) == 1) {
-            return string(abi.encodePacked(BASE_URI, "base/", _tokenId.toString(), "-super.json"));
+            return string(abi.encodePacked(BASE_URI, _tokenId.toString(), "-super.json"));
         } else {
-            return string(abi.encodePacked(BASE_URI, "base/", _tokenId.toString(), "-miner.json"));
+            return string(abi.encodePacked(BASE_URI, _tokenId.toString(), "-miner.json"));
         }
     }
 
-    function contractURI() public pure returns (string memory) {
+    function contractURI() public view returns (string memory) {
         return string(abi.encodePacked(BASE_URI, "contract-meta.json"));
     }
 
@@ -223,7 +248,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
 
         for (uint256 i = 0; i < outputSize; i++) {
             uint256 tokenId = tokenOfOwnerByIndex(_owner, _offset + i);
-            bool revealed = tokenRevealed(tokenId);
             uint256 level = 0;
             if (revealed) {
                 level = revealedTokenLevel(tokenId);
@@ -241,6 +265,11 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
 
     //  Extras
 
+
+    function reveal() external onlyOwner{
+        revealed = true;
+    }
+
     function isApprovedForAll(address _owner, address _operator) public view override returns (bool) {
         if (_operator == mineAddress) {
             return true;
@@ -254,9 +283,13 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         mineAddress = _mineAddress;
     }
 
-    // function setDiamond(Diamond _diamond) external onlyOwner {
-    //     diamond = _diamond;
-    // }
+    function setBaseURI(string memory _newBaseURI) public onlyOwner {
+    BASE_URI = _newBaseURI;
+    }
+
+    function setDiamond(Diamond _diamond) external onlyOwner {
+        diamond = _diamond;
+    }
 
     function withdrawBalance(uint256 _amount) external onlyOwner {
         require(_amount <= address(this).balance);
