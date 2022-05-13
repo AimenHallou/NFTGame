@@ -31,11 +31,11 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     address[] public whiteListAddresses;
 
     uint256 public constant MAX_PER_MINT = 30;
-    uint256 public MAX_BASE_SUPPLY = 5;
+    uint256 public MAX_BASE_SUPPLY = 9500;
     uint256 public MAX_PRESALE_SUPPLY = 500;
-    uint256 public constant BASE_MINT_PRICE = 0.001 ether; // 1.5 AVAX
-    uint256 public constant PRESALE_MINT_PRICE = 0.001 ether; // 1.25 AVAX
-    uint256 public constant NFT_TAX = 0 ether; // 0.1 AVAX
+    uint256 public constant BASE_MINT_PRICE = 1.25 ether; // 1.25 AVAX
+    uint256 public constant PRESALE_MINT_PRICE = 1 ether; // 1 AVAX
+    uint256 public constant NFT_TAX = 0.1 ether; // 0.1 AVAX
     uint256 public constant BASE_SUPER_PERCENTAGE = 5;
     uint256 public constant UPGRADE_SALES_OFFSET = 2 days;
 
@@ -46,7 +46,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     uint256 public salesStartTime;
 
     mapping(uint256 => uint256) private tokenLevel;
-    mapping(uint256 => uint256) public baseTokenMintBlock;
     Level[] public levels;
 
     string  BASE_URI = "";
@@ -61,7 +60,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         // supply and price are ignored for the base levels of miners and super miners
         setBaseURI(_initBaseURI);
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 1 }));
-        levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 25 }));
+        levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 5 }));
         //_mintBaseTokens(5, msg.sender);
     }
 
@@ -131,7 +130,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
             uint256 tokenId = baseSupply;
             _safeMint(_for, tokenId);
             baseSupply++;
-            baseTokenMintBlock[tokenId] = block.number;
 
             if (_rand(totalSupply()) % 100 < BASE_SUPER_PERCENTAGE) {
                 tokenLevel[tokenId] = 1; // super miner
@@ -144,6 +142,12 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     function whiteListUsers (address[] calldata _users) public onlyOwner{
         delete whiteListAddresses;
         whiteListAddresses = _users;
+    }
+
+    function giveFreeNFTs (address[] calldata _users) public onlyOwner {
+        for (uint i = 0; i< _users.length; i++){
+            _mintBaseTokens(1,_users[i]);
+        }
     }
 
     function isWhiteListed (address _user) public view returns (bool) {

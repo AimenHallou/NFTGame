@@ -1,7 +1,5 @@
 //SPDX-License-Identifier: Unlicense
 // File: @openzeppelin/contracts/utils/cryptography/MerkleProof.sol
-
-
 // OpenZeppelin Contracts (last updated v4.5.0) (utils/cryptography/MerkleProof.sol)
 
 pragma solidity ^0.8.0;
@@ -1964,6 +1962,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 }
 
 // File: contracts/Diamond.sol
+
 pragma solidity ^0.8.4;
 
 
@@ -2113,6 +2112,7 @@ library SafeERC20 {
 }
 
 // File: contracts/Miner.sol
+
 pragma solidity ^0.8.4;
 
 
@@ -2143,11 +2143,11 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     address[] public whiteListAddresses;
 
     uint256 public constant MAX_PER_MINT = 30;
-    uint256 public MAX_BASE_SUPPLY = 5;
-    uint256 public constant MAX_PRESALE_SUPPLY = 500;
-    uint256 public constant BASE_MINT_PRICE = 0.001 ether; // 1.5 AVAX
-    uint256 public constant PRESALE_MINT_PRICE = 0.001 ether; // 1.25 AVAX
-    uint256 public constant NFT_TAX = 0 ether; // 0.1 AVAX
+    uint256 public MAX_BASE_SUPPLY = 9500;
+    uint256 public MAX_PRESALE_SUPPLY = 500;
+    uint256 public constant BASE_MINT_PRICE = 1.25 ether; // 1.25 AVAX
+    uint256 public constant PRESALE_MINT_PRICE = 1 ether; // 1 AVAX
+    uint256 public constant NFT_TAX = 0.1 ether; // 0.1 AVAX
     uint256 public constant BASE_SUPER_PERCENTAGE = 5;
     uint256 public constant UPGRADE_SALES_OFFSET = 2 days;
 
@@ -2173,7 +2173,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         // supply and price are ignored for the base levels of miners and super miners
         setBaseURI(_initBaseURI);
         levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 1 }));
-        levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 25 }));
+        levels.push(Level({ supply: 0, maxSupply: 0, price: 0, yield: 5 }));
         //_mintBaseTokens(5, msg.sender);
     }
 
@@ -2207,8 +2207,12 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         salesStartTime = _startTime;
     }
 
-    function burnMAX_BASE_SUPPLY(uint256 _value) external onlyOwner {
+    function setMAX_BASE_SUPPLY(uint256 _value) external onlyOwner {
         MAX_BASE_SUPPLY = _value;
+    }
+
+    function setMAX_PRESALE_SUPPLY(uint256 _value) external onlyOwner {
+        MAX_PRESALE_SUPPLY = _value;
     }
 
     function setPresaleStartTime(uint256 _startTime) external onlyOwner {
@@ -2276,9 +2280,10 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
 
         uint256 totalCost = _numTokens * levels[_level].price;
+        if (msg.sender != owner()){
         require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
         diamond.burn(msg.sender, totalCost);
-
+        }
         for (uint256 i = 0; i < _numTokens; i++) {
             uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
             _safeMint(msg.sender, tokenId);
