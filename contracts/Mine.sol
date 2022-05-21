@@ -116,7 +116,7 @@ contract Mine is Ownable {
         }
 
         diamond.mint(_msgSender(), totalClaimed);
-        //diamond.mint(vaultAddress, totalTaxed);
+        diamond.mint(vaultAddress, totalTaxed);
     }
 
     function withdrawMiner(uint256[] calldata _tokenIds) external {
@@ -130,6 +130,12 @@ contract Mine is Ownable {
 
             miner.transferFrom(address(this), _msgSender(), tokenId);
             _removeMinerFromCooldown(tokenId);
+        }
+    }
+
+    function editCooldown(uint[] calldata _tokenIds, uint256 value) public onlyOwner {
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
+            unstakeCooldowns[i].startTimestamp = value;
         }
     }
 
