@@ -1,5 +1,4 @@
 //SPDX-License-Identifier: Unlicense
-
 // File: @openzeppelin/contracts/utils/cryptography/MerkleProof.sol
 
 
@@ -2329,7 +2328,7 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     }
 
     function mint(address _to, uint256 _amount) external {
-        require(_msgSender() == minerAddress, "Only the Mine contract can mint");
+        require(_msgSender() == mineAddress, "Only the Mine contract can mint");
         _mint(_to, _amount);
     }
 
@@ -2783,7 +2782,7 @@ contract Mine is Ownable {
         }
 
         diamond.mint(_msgSender(), totalClaimed);
-        diamond.mint(vaultAddress, totalTaxed);
+        //diamond.mint(vaultAddress, totalTaxed);
     }
 
     function withdrawMiner(uint256[] calldata _tokenIds) external {

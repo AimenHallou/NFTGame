@@ -116,7 +116,7 @@ contract Mine is Ownable {
         }
 
         diamond.mint(_msgSender(), totalClaimed);
-        diamond.mint(vaultAddress, totalTaxed);
+        //diamond.mint(vaultAddress, totalTaxed);
     }
 
     function withdrawMiner(uint256[] calldata _tokenIds) external {

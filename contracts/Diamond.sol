@@ -32,7 +32,7 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     }
 
     function mint(address _to, uint256 _amount) external {
-        require(_msgSender() == minerAddress, "Only the Mine contract can mint");
+        require(_msgSender() == mineAddress, "Only the Mine contract can mint");
         _mint(_to, _amount);
     }
 
