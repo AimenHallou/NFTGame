@@ -41,14 +41,14 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable {
     }
 
     function quickUnstake(uint256 _share) public {
-        uint256 output = _unstakeOutput(_share).mul(100 - QUICK_UNSTAKE_PENALTY_PERCENT).div(100);
+        uint256 output = sharesToDiamonds(_share).mul(100 - QUICK_UNSTAKE_PENALTY_PERCENT).div(100);
         _burn(msg.sender, _share);
         diamond.transfer(msg.sender, output);
     }
 
     // argument specified in sDIAMOND
     function prepareDelayedUnstake(uint256 _share) public {
-        uint256 output = _unstakeOutput(_share);
+        uint256 output = sharesToDiamonds(_share);
         _burn(msg.sender, _share);
 
         unlockAmounts[msg.sender] += output;
@@ -70,11 +70,18 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable {
         balance = diamond.balanceOf(address(this)) - storedDiamond;
     }
 
-    function _unstakeOutput(uint256 _share) internal view returns (uint256 output) {
+
+
+    function sharesToDiamonds(uint256 _share) public view returns (uint256 output) {
         uint256 totalShares = totalSupply();
         output = _share.mul(
             diamondBalance()
         ).div(totalShares);
+    }
+
+    function diamondsToShares(uint256 _diamonds) public view returns (uint256 output) {
+        uint256 totalShares = totalSupply();
+        output = _diamonds.mul(totalShares).div(diamondBalance());
     }
 
     function burn(address _from, uint256 _amount) external {

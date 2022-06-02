@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 import "./Diamond.sol";
+import "./Event.sol";
 
 
 contract Miner is ERC721Enumerable, Ownable, Pausable {
@@ -27,8 +28,11 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     Diamond public diamond;
+    Event public events;
     address public mineAddress;
     address[] public whiteListAddresses;
+
+    uint256 public constant lockLV = 2;
 
     uint256 public constant MAX_PER_MINT = 30;
     uint256 public MAX_BASE_SUPPLY = 9500;
@@ -46,6 +50,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     uint256 public salesStartTime;
 
     mapping(uint256 => uint256) private tokenLevel;
+
     Level[] public levels;
 
     string  BASE_URI = "";
@@ -169,6 +174,10 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         levels.push(Level({ supply: 0, maxSupply: _maxSupply, price: _price, yield: _yield }));
     }
 
+    function updateUpgradePrice(uint256 _level, uint256 _price) public onlyOwner{
+        levels[_level].price = _price;
+    }
+
     function mintUpgrade(uint256 _level, uint16 _numTokens) external {
         require(gameStarted(), "Upgrade sales are not open");
         require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
@@ -176,6 +185,11 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
 
         uint256 totalCost = _numTokens * levels[_level].price;
+
+        if (_level == lockLV){
+               require(events.activeEvent() == 2, "You can only mint a lock during the locksmith event"); 
+        }
+
         if (msg.sender != owner()){
         require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
         diamond.burn(msg.sender, totalCost);
@@ -291,13 +305,19 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         mineAddress = _mineAddress;
     }
 
+    function setDiamond(Diamond _diamond) external onlyOwner {
+        diamond = _diamond;
+    }
+
+    function setEvent(Event _events) external onlyOwner {
+        events = _events;
+    }
+
     function setBaseURI(string memory _newBaseURI) public onlyOwner {
     BASE_URI = _newBaseURI;
     }
 
-    function setDiamond(Diamond _diamond) external onlyOwner {
-        diamond = _diamond;
-    }
+
 
     function withdrawBalance(uint256 _amount) external onlyOwner {
         require(_amount <= address(this).balance);
