@@ -30,6 +30,7 @@ contract Mine is Ownable {
         uint256 tokenId;
         uint256 level;
         uint256 accrual;
+        uint256 startTimestamp;
     }
 
     mapping(uint256 => StakeDetails) public stakes;
@@ -187,11 +188,12 @@ contract Mine is Ownable {
 
         for (uint256 i = 0; i < outputSize; i++) {
             uint256 tokenId = stakeOfOwnerByIndex(_owner, _offset + i);
-
+            StakeDetails memory stake = stakes[tokenId];
             outputs[i] = OwnedStakeInfo({
                 tokenId: tokenId,
                 level: miner.revealedTokenLevel(tokenId),
-                accrual: _getDiamondsAccruedFor(tokenId, false)
+                accrual: _getDiamondsAccruedFor(tokenId, false),
+                startTimestamp: stake.startTimestamp
             });
         }
 

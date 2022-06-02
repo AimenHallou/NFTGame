@@ -150,6 +150,10 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         }
     }
 
+    function burnLock(uint256 _id) public{
+        _burn(_id);
+    }
+
     function isWhiteListed (address _user) public view returns (bool) {
         for(uint256 i=0; i<whiteListAddresses.length; i++){
             if(whiteListAddresses[i] == _user){

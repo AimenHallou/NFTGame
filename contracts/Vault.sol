@@ -76,4 +76,8 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable {
             diamondBalance()
         ).div(totalShares);
     }
+
+    function burn(address _from, uint256 _amount) external {
+        _burn(_from, _amount);
+    }
 }
