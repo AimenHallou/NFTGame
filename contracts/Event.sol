@@ -113,39 +113,39 @@ contract Event is Ownable {
 
 //Function to check if a miner has already been used
 
-    function isMinerUsed(uint256 _id, uint256[] memory _miners) public view returns(bool) {
+    function isMinerUsed(uint256 _id, uint256[] memory _miners) public pure returns(bool results) {
         for (uint256 i = 0; i < _miners.length; i++){
             if (_miners[i]== _id)
-             return true;
+             results = true;
         }
-        return false;
+        results = false;
     }
 
-    function isMinerUsed(uint256[] memory _miners) public view returns(bool){
+    function isMinerUsed(uint256[] memory _miners) public view returns(bool results){
         uint256 totalStaked = mine.ownedStakesBalance(msg.sender);
         Mine.OwnedStakeInfo[] memory temp;
         for (uint256 i = 0; i < totalStaked; i++){
             for (uint256 j = 0; j < _miners.length; j++){
                 temp = mine.batchedStakesOfOwner(msg.sender,i,1);
                 if (temp[0].tokenId == _miners[j]){
-                    return true;
+                    results = true;
                 }
         }
-        return false;
+        results = false;
         }
     }
 
 //Check if a miner owns a lock
-    function isMinerProtected(address _player) public view returns(bool){
+    function isMinerProtected(address _player) public view returns(bool result){
         uint256 totalStaked = mine.ownedStakesBalance(_player);
         Mine.OwnedStakeInfo[] memory temp;
         for (uint256 i = 0; i < totalStaked-1; i++){
             temp = mine.batchedStakesOfOwner(_player,i,1);
                 if (temp[0].level == lockLV){
-                    return true;
+                    result = true;
             }
         }
-        return false;
+        result = false;
     }
 
     function burnLock(address _player) internal{
@@ -161,18 +161,16 @@ contract Event is Ownable {
     }
 
 //How many miners are used
-    function countMinersUsed(uint256[] memory _miners) public view returns(uint256){
+    function countMinersUsed(uint256[] memory _miners) public view returns(uint256 total){
         uint256 totalStaked = mine.ownedStakesBalance(msg.sender);
         Mine.OwnedStakeInfo[] memory temp;
-        uint256 tempTotal = 0;
         for (uint256 i = 0; i < totalStaked; i++){
             for (uint256 j = 0; j < _miners.length; j++){
                 temp = mine.batchedStakesOfOwner(msg.sender,i,1);
                 if (temp[0].tokenId == _miners[j]){
-                    tempTotal++;
+                    total++;
                 }
-        }
-        return tempTotal;
+            }
         }
     }
 
@@ -245,17 +243,17 @@ contract Event is Ownable {
         diamond.mint(msg.sender, (vault.storedDiamond()/99)*countMinersUsed(pastMiners));
     }
 
-    function playerExist(address _player) internal returns(bool){
+    function playerExist(address _player) internal view returns(bool result){
         for (uint256 i = 0; i<miners.length; i++){
             if (_player == miner.ownerOf(miners[i])){
-                return true;
+                result = true;
             }
         }
-        return false;
+        result = false;
     }
 
 
-    function attackedMiners() public onlyOwner returns(bool) {
+    function attackedMiners() public onlyOwner returns(bool result) {
         address[] memory players;
 
         for (uint256 i = 0; i < miners.length; i++){
@@ -268,10 +266,10 @@ contract Event is Ownable {
         for (uint256 i = 0; i < players.length; i++){
         if (isMinerProtected(players[i])){
             burnLock(players[i]);
-            return false;
+            result = false;
         } else {
             vault.burn(players[i], 200000);
-            return true;
+            result = true;
         }
         }
     }
