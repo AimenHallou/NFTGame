@@ -1,12 +1,12 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./Diamond.sol";
-import "./Miner.sol";
+
+
+
+
+
 
 contract Mine is Ownable {
     using SafeMath for uint256;
@@ -15,7 +15,7 @@ contract Mine is Ownable {
     Diamond public diamond;
     address public vaultAddress;
 
-    uint256 public YIELD_DPS = 16666666666666667; // diamonds mined per second per unit of yield
+    uint256 public constant YIELD_CPS = 16666666666666667; // diamonds mined per second per unit of yield
     uint256 public constant CLAIM_DIAMOND_TAX_PERCENTAGE = 20;
     uint256 public constant UNSTAKE_COOLDOWN_DURATION = 2 days;
 
@@ -64,15 +64,6 @@ contract Mine is Ownable {
         vaultAddress = _vaultAddress;
     }
 
-    function setYieldDps(uint256 _amount) public onlyOwner {
-        YIELD_DPS = _amount;
-    }
-
-    function burnLock(uint256 _id) public onlyOwner {
-        miner.burnLock(_id);
-        delete stakes[_id];
-    }
-
     // Views
 
     function getDiamondsAccruedForMany(uint256[] calldata _tokenIds) external view returns (uint256[] memory) {
@@ -89,7 +80,7 @@ contract Mine is Ownable {
         if (checkOwnership) {
             require(stake.owner == _msgSender(), "You don't own this token");
         }
-        return (block.timestamp - stake.startTimestamp) * miner.tokenYield(_tokenId) * YIELD_DPS;
+        return (block.timestamp - stake.startTimestamp) * miner.tokenYield(_tokenId) * YIELD_CPS;
     }
 
     // Mutators
@@ -293,3 +284,6 @@ contract Mine is Ownable {
     }
 
 }
+
+
+

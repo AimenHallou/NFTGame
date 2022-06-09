@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 import "./Diamond.sol";
-import "./Event.sol";
+//import "./Event.sol";
 
 
 contract Miner is ERC721Enumerable, Ownable, Pausable {
@@ -28,7 +28,8 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     Diamond public diamond;
-    Event public events;
+    //    Event public events;
+    address public eventAddress;
     address public mineAddress;
     address[] public whiteListAddresses;
 
@@ -183,22 +184,42 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
         require(_level < levels.length && _level > 1, "Invalid level");
         require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
+        require(_level != lockLV, "Locks can only be minted through the event contract"); 
 
         uint256 totalCost = _numTokens * levels[_level].price;
 
-        if (_level == lockLV){
-               require(events.activeEvent() == 2, "You can only mint a lock during the locksmith event"); 
-        }
-
         if (msg.sender != owner()){
-        require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
-        diamond.burn(msg.sender, totalCost);
+            require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
+            diamond.burn(msg.sender, totalCost);
         }
         for (uint256 i = 0; i < _numTokens; i++) {
             uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
             _safeMint(msg.sender, tokenId);
             tokenLevel[tokenId] = _level;
             levels[_level].supply++;
+            upgradeSupply++;
+        }
+    }
+
+    function mintLock(uint16 _numTokens, address _to) external {
+        require(gameStarted(), "Upgrade sales are not open");
+        require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
+        require(lockLV < levels.length && lockLV > 1, "Invalid level");
+        require(levels[lockLV].supply + _numTokens <= levels[lockLV].maxSupply, "Insufficient supply");
+        require(msg.sender == eventAddress, "Locks can only be minted through the event contract"); 
+
+        uint256 totalCost = _numTokens * levels[lockLV].price;
+
+        if (msg.sender != owner()){
+            require(diamond.balanceOf(_to) >= totalCost, "Insufficient DIAMOND balance");
+            diamond.burn(_to, totalCost);
+        }
+
+        for (uint256 i = 0; i < _numTokens; i++) {
+            uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
+            _safeMint(_to, tokenId);
+            tokenLevel[tokenId] = lockLV;
+            levels[lockLV].supply++;
             upgradeSupply++;
         }
     }
@@ -305,16 +326,17 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         mineAddress = _mineAddress;
     }
 
+    function setEventAddress(address _eventAddress) external onlyOwner {
+        require(address(_eventAddress) == address(0), "Event address already set");
+        eventAddress = _eventAddress;
+    }
+
     function setDiamond(Diamond _diamond) external onlyOwner {
         diamond = _diamond;
     }
 
-    function setEvent(Event _events) external onlyOwner {
-        events = _events;
-    }
-
     function setBaseURI(string memory _newBaseURI) public onlyOwner {
-    BASE_URI = _newBaseURI;
+        BASE_URI = _newBaseURI;
     }
 
 
