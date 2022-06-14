@@ -296,7 +296,7 @@ contract Event is Ownable {
     }
 
 //Buy a lock from the locksmith
-    function mintLock(uint16 _numTokens) external {
+    function mintLock(uint16 _numTokens) public {
         require(activeEvent() == 2, "Locks can only be minted during the Locksmith event");
         miner.mintLock(_numTokens, msg.sender);
     }
