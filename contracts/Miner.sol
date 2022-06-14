@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 import "./Diamond.sol";
-//import "./Event.sol";
 
 
 contract Miner is ERC721Enumerable, Ownable, Pausable {
@@ -28,7 +27,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     Diamond public diamond;
-    //    Event public events;
     address public eventAddress;
     address public mineAddress;
     address[] public whiteListAddresses;
@@ -77,7 +75,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         require(msg.value >= _numTokens * BASE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
         }
         require(baseSalesOpen(), "The main sale period is not open");
-
         _mintBaseTokens(_numTokens, _msgSender());
     }
 
@@ -88,7 +85,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         require(presaleOpen(), "The presale is not open");
         require(presaleSupply + _numTokens <= MAX_PRESALE_SUPPLY, "Insufficient presale supply");
         require(isWhiteListed(_msgSender()), "The sender is not whitelisted");
-
         _mintBaseTokens(_numTokens, _msgSender());
         presaleSupply += _numTokens;
     }
@@ -96,7 +92,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     function setSalesStartTime(uint256 _startTime) external onlyOwner {
         require(_startTime > block.timestamp, "Start time must be in the future");
         require(!baseSalesOpen(), "Base sales already started");
-
         salesStartTime = _startTime;
     }
 

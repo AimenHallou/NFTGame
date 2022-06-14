@@ -23,7 +23,6 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable {
 
     function setDiamond(Diamond _diamond) external onlyOwner {
         require(address(diamond) == address(0), "Diamond contract already set");
-
         diamond = _diamond;
     }
 

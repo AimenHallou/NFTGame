@@ -21,19 +21,9 @@ contract Event is Ownable {
     uint256 eventSize = 5;
     uint256 lockLV = 2;
     uint256 playerSize;
+    bool public eventPaused = true;
 
-    uint256 public constant EVENT_DURATION = 5 minutes; //Change back to 1 day
-
-    // GEM guy that doubles ur earnings
-    // Lottery guy
-    // Lock seller
-
-    //rain diamonds
-    //diamond drought
-
-    // make owner only on some functions
-
-    // make some functions private and local only
+    uint256 public EVENT_DURATION = 1 days;
 
     struct eventHold {
         string name;
@@ -74,10 +64,10 @@ contract Event is Ownable {
         events[4] = eventHold({name: 'Diamond Apocalypse', available: false, startTimestamp: 0, price: 0});
     }
 
+//Switch between events 
     function switchEvents(uint256 _id, uint256 _price) public onlyOwner {
-        //require(block.timestamp >= events[activeEvent()].startTimestamp + EVENT_DURATION, "Event is still ongoing");
+        require(block.timestamp >= events[activeEvent()].startTimestamp + EVENT_DURATION, "Event is still ongoing");
         pastEvent = activeEvent();
-
         if(_id == 3) {
             mine.setYieldDps(16666666666666667 * 2);
         } else if(_id == 4) {
@@ -91,9 +81,6 @@ contract Event is Ownable {
         for (uint256 i = 0; i < eventSize - 1; i++) {
             events[i].available = false;
         }
-        //empty array
-        //same old array
-        //mapping(address => uint256) storage emptyPlayers;
         for(uint256 i = 0; i < playersAddresses.length; i++) {
             lastPlayers[playersAddresses[i]] = players[playersAddresses[i]];
         }
@@ -107,7 +94,11 @@ contract Event is Ownable {
         events[_id].price = _price;
     }
 
-    //Function to check if a miner has already been used
+    function pauseUnpauseEvent() public onlyOwner{
+        eventPaused = !eventPaused;
+    }
+
+//Function to check if a miner has already been used
     function isMinerUsed() public view returns (bool) {
         if (players[msg.sender] > 0) {
             return true;
@@ -115,7 +106,7 @@ contract Event is Ownable {
         return false;
     }
 
-    //Checks if an amount of miners are able to be used
+//Checks if an amount of miners are able to be used
     function isMinerUsed(uint256 _size) public view returns (bool) {
         uint256 totalStaked = mine.ownedStakesBalance(msg.sender);
         if (totalStaked < _size) {
@@ -128,7 +119,7 @@ contract Event is Ownable {
         return false;
     }
 
-      //Function to check if a miner has already been used
+//Function to check if a miner has already been used
     function isPastMinerUsed() public view returns (bool) {
         if (lastPlayers[msg.sender] > 0) {
             return true;
@@ -136,7 +127,7 @@ contract Event is Ownable {
         return false;
     }
 
-    //Checks if an amount of miners are able to be used
+//Checks if an amount of miners are able to be used
     function isPastMinerUsed(uint256 _size) public view returns (bool) {
         uint256 totalStaked = mine.ownedStakesBalance(msg.sender);
         if (totalStaked < _size) {
@@ -149,7 +140,7 @@ contract Event is Ownable {
         return false;
     }
 
-    //Check if a miner owns a lock
+//Check if a miner owns a lock
     function isMinerProtected(address _player) public view returns (bool) {
         uint256 totalStaked = mine.ownedStakesBalance(_player);
         Mine.OwnedStakeInfo[] memory stakes = mine.batchedStakesOfOwner(_player, 0, totalStaked);
@@ -163,6 +154,7 @@ contract Event is Ownable {
         return false;
     }
 
+//Burn a lock to protect yourself from an attack
     function burnLock(address _player) internal {
         uint256 totalStaked = mine.ownedStakesBalance(_player);
         Mine.OwnedStakeInfo[] memory stakes = mine.batchedStakesOfOwner(_player, 0, totalStaked);
@@ -175,10 +167,17 @@ contract Event is Ownable {
         }
     }
 
+//Event duration setter
+    function setEVENT_DURATION(uint256 _duration) public onlyOwner{
+        EVENT_DURATION = _duration;
+    }
+
+//Event price setter
     function setEventPrice(uint256 _id, uint256 _price) public onlyOwner {
         events[_id].price = _price;
     }
 
+//Returns what event is currently active
     function activeEvent() public view returns (uint256 _id) {
         uint256 id;
         for (uint256 i = 0; i < eventSize - 1; i++) {
@@ -188,22 +187,22 @@ contract Event is Ownable {
         }
     }
 
-    //Function to send miners
-    function setMinerOut() public {
+//Send out miner to participate in event 
+    function setMinerOut() internal{
         require(mine.ownedStakesBalance(msg.sender) > 0, 'You must have a miner staked');
         players[msg.sender] = 1;
         playersAddresses.push(msg.sender);
-
-        //miners[miners.length+1] = mine.batchedStakesOfOwner(msg.sender,0,1)[0].tokenId;
     }
 
-    function setMinerOut(uint256 _amount) public {
+//Send out miners to participate in event 
+    function setMinerOut(uint256 _amount) internal {
         require(mine.ownedStakesBalance(msg.sender) >= _amount, 'You must have miners staked');
         players[msg.sender] = players[msg.sender] + _amount;
         playersAddresses.push(msg.sender);
     }
 
-    function cleanPlayers() public onlyOwner {
+//Remove player from event
+    function cleanPlayers() internal {
         for (uint256 i = 0; i < playersAddresses.length; i++) {
             players[playersAddresses[i]] = 0;
         }
@@ -211,12 +210,13 @@ contract Event is Ownable {
         playersAddresses = emptyArray;
     }
 
-    // Event function
-    // Check if you even own a miner
+//Play the gem event
     function gemPlay(uint256 _amount) public returns (bool) {
+        require(eventPaused, "Events are currently paused");
         require(activeEvent() == 0, "Event isn't ongoing");
         require(!isMinerUsed(), 'A miner has already performed an action during this event');
         require(diamond.balanceOf(msg.sender) >= _amount, 'Insufficient DIAMOND balance');
+        //FIX HERE
         //random chance
         if (block.timestamp % 4 == 0) {
             diamond.mint(msg.sender, _amount);
@@ -229,12 +229,14 @@ contract Event is Ownable {
         }
     }
 
+//Play the dealer event
     function dealerStart(uint256 _amount) public returns (bool) {
+        require(eventPaused, "Events are currently paused");
         require(activeEvent() == 1, "Event isn't ongoing");
         require(_amount > 0, 'Amount must be above zero');
         require(!isMinerUsed(_amount), "You don't have available miners");
         require(diamond.balanceOf(msg.sender) >= events[activeEvent()].price, 'Insufficient DIAMOND balance');
-        //Small % of wining
+        //FIX HERE
         diamond.burn(msg.sender, events[activeEvent()].price);
         if (block.timestamp % 4 == 0) {
             diamond.mint(msg.sender, events[activeEvent()].price * 10);
@@ -247,19 +249,22 @@ contract Event is Ownable {
         }
     }
 
-    function minersMiracleStart(uint256 _amount) public {
+//Send out an attack during an event
+    function specialEventStart(uint256 _amount) public {
+        require(eventPaused, "Events are currently paused");
         require(activeEvent() == 3 || activeEvent() == 4, "Event isn't ongoing");
         require(!isMinerUsed(_amount), "This miner has already performed an action during this event");
         setMinerOut(_amount);
     }
 
-    function attackMinersReward() public {
+//Reward attackers with diamonds
+    function attackMinersReward() public onlyOwner{
         require(pastEvent == 3 || pastEvent == 4, "Past event has to be an attackable event");
         require(isPastMinerUsed(), "You haven't sent anyone out to attack");
-        //Reward attacker with diamonds
         diamond.mint(msg.sender, (vault.storedDiamond() / 99) * lastPlayers[msg.sender]);
     }
 
+//Checks if player is already set out to be attacked
     function playerExist(address _player) internal view returns (bool result) {
         result = false;    
         for (uint256 i = 0; i < playersAttacked.length; i++) {
@@ -269,15 +274,15 @@ contract Event is Ownable {
         }
     }
 
+//Attcking miners after special events
     function attackedMiners() public onlyOwner {
         for (uint256 i = 0; i < miner.totalSupply(); i++) {
-            // change
+            // Implement random feature
             if (!playerExist(miner.ownerOf(i))) {
                 address temp = miner.ownerOf(i);
                 playersAttacked.push(temp);
             }
         }
-
         for (uint256 i = 0; i < playersAttacked.length; i++) {
             if (isMinerProtected(playersAttacked[i])) {
                 burnLock(playersAttacked[i]);
@@ -290,6 +295,7 @@ contract Event is Ownable {
         }
     }
 
+//Buy a lock from the locksmith
     function mintLock(uint16 _numTokens) external {
         require(activeEvent() == 2, "Locks can only be minted during the Locksmith event");
         miner.mintLock(_numTokens, msg.sender);

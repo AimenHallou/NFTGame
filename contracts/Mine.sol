@@ -33,8 +33,6 @@ contract Mine is Ownable {
         uint256 startTimestamp;
     }
 
-    mapping(uint256 => StakeDetails) public stakes;
-
     struct UnstakeCooldown {
         address owner;
         uint256 tokenId;
@@ -48,6 +46,7 @@ contract Mine is Ownable {
         uint256 startTimestamp;
     }
 
+    mapping(uint256 => StakeDetails) public stakes;
     mapping(uint256 => UnstakeCooldown) public unstakeCooldowns;
 
     mapping(address => mapping(uint256 => uint256)) private ownedStakes; // (user, index) => stake
@@ -64,17 +63,18 @@ contract Mine is Ownable {
         vaultAddress = _vaultAddress;
     }
 
+//Setter for YieldDps
     function setYieldDps(uint256 _amount) public onlyOwner {
         YIELD_DPS = _amount;
     }
 
+//burn a lock 
     function burnLock(uint256 _id) public onlyOwner {
         miner.burnLock(_id);
         delete stakes[_id];
     }
 
-    // Views
-
+//Get diamonds accrued for tokens
     function getDiamondsAccruedForMany(uint256[] calldata _tokenIds) external view returns (uint256[] memory) {
         uint256[] memory diamondAmounts = new uint256[](_tokenIds.length);
         for (uint256 i = 0; i < _tokenIds.length; i++) {
@@ -83,6 +83,7 @@ contract Mine is Ownable {
         return diamondAmounts;
     }
 
+//Get diamonds accrued as long as you own them
     function _getDiamondsAccruedFor(uint256 _tokenId, bool checkOwnership) internal view returns (uint256) {
         StakeDetails memory stake = stakes[_tokenId];
         require(stake.staked, "This token isn't staked");
@@ -92,8 +93,7 @@ contract Mine is Ownable {
         return (block.timestamp - stake.startTimestamp) * miner.tokenYield(_tokenId) * YIELD_DPS;
     }
 
-    // Mutators
-
+//Stake miners and upgrades 
     function stakeMany(uint256[] calldata _tokenIds) external {
         require(miner.gameStarted(), "The game has not started");
 
@@ -107,6 +107,7 @@ contract Mine is Ownable {
         }
     }
 
+//Claim diamonds and/or unstake
     function claimDiamondsAndMaybeUnstake(uint256[] calldata _tokenIds, bool unstake) external {
         uint256 totalClaimed = 0;
         uint256 totalTaxed = 0;
@@ -129,6 +130,7 @@ contract Mine is Ownable {
         diamond.mint(vaultAddress, totalTaxed);
     }
 
+//Withdraw a miner
     function withdrawMiner(uint256[] calldata _tokenIds) external {
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             uint256 tokenId = _tokenIds[i];
@@ -143,6 +145,7 @@ contract Mine is Ownable {
         }
     }
 
+//Edit cooldowns for miners or upgrades 
     function editCooldown(uint[] calldata _tokenIds, uint256 value) public onlyOwner {
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             unstakeCooldowns[i].startTimestamp = value;
