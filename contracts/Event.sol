@@ -219,7 +219,7 @@ contract Event is Ownable {
         //FIX HERE
         //random chance
         if (block.timestamp % 4 == 0) {
-            diamond.mint(msg.sender, _amount);
+            diamond.mint(msg.sender, _amount*2);
             setMinerOut();
             return true;
         } else {
@@ -243,7 +243,6 @@ contract Event is Ownable {
             setMinerOut(_amount);
             return true;
         } else {
-            diamond.burn(msg.sender, events[activeEvent()].price);
             setMinerOut(_amount);
             return false;
         }

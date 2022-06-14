@@ -152,6 +152,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     function burnLock(uint256 _id) public{
+        require(msg.sender == mineAddress, "Only the mine address can burn a lock");
         _burn(_id);
     }
 
@@ -170,7 +171,8 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         levels.push(Level({ supply: 0, maxSupply: _maxSupply, price: _price, yield: _yield }));
     }
 
-    function updateUpgradePrice(uint256 _level, uint256 _price) public onlyOwner{
+    function updateUpgradePrice(uint256 _level, uint256 _price) public{
+        require(msg.sender == eventAddress || msg.sender == owner(), "Must be the owner or event address to set prices");
         levels[_level].price = _price;
     }
 
@@ -316,17 +318,16 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         return super.isApprovedForAll(_owner, _operator);
     }
 
-    function setMineAddress(address _mineAddress) external onlyOwner {
+    function setMineAddress(address _mineAddress) public onlyOwner {
         require(mineAddress == address(0), "Mine address already set");
         mineAddress = _mineAddress;
     }
 
-    function setEventAddress(address _eventAddress) external onlyOwner {
-        require(address(_eventAddress) == address(0), "Event address already set");
+    function setEventAddress(address _eventAddress) public onlyOwner {
         eventAddress = _eventAddress;
     }
 
-    function setDiamond(Diamond _diamond) external onlyOwner {
+    function setDiamond(Diamond _diamond) public onlyOwner {
         diamond = _diamond;
     }
 

@@ -14,6 +14,7 @@ contract Mine is Ownable {
     Miner public miner;
     Diamond public diamond;
     address public vaultAddress;
+    address public eventAddress;
 
     uint256 public YIELD_DPS = 16666666666666667; // diamonds mined per second per unit of yield
     uint256 public constant CLAIM_DIAMOND_TAX_PERCENTAGE = 20;
@@ -64,7 +65,8 @@ contract Mine is Ownable {
     }
 
 //Setter for YieldDps
-    function setYieldDps(uint256 _amount) public onlyOwner {
+    function setYieldDps(uint256 _amount) public {
+        require(msg.sender == eventAddress || msg.sender == owner(), "Must be the owner or event address to set prices");
         YIELD_DPS = _amount;
     }
 
@@ -243,6 +245,11 @@ contract Mine is Ownable {
     function cooldownOfOwnerByIndex(address _owner, uint256 _index) public view returns (uint256) {
         require(_index < ownedCooldownsBalance[_owner], "owner index out of bounds");
         return ownedCooldowns[_owner][_index];
+    }
+
+
+    function setEventAddress(address _eventAddress) public onlyOwner {
+        eventAddress = _eventAddress;
     }
 
     function batchedCooldownsOfOwner(
