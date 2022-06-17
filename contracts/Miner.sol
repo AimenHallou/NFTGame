@@ -141,8 +141,10 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     function whiteListUsers (address[] calldata _users) public onlyOwner{
-        delete whiteListAddresses;
-        whiteListAddresses = _users;
+        //delete whiteListAddresses;
+        for (uint256 i = 0; i<_users.length; i++){
+            whiteListAddresses.push(_users[i]);
+        }
     }
 
     function giveFreeNFTs (address[] calldata _users) public onlyOwner {

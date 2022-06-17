@@ -21,7 +21,7 @@ contract Event is Ownable {
     uint256 eventSize = 5;
     uint256 lockLV = 2;
     uint256 playerSize;
-    bool public eventPaused = true;
+    bool public eventPlayable = true;
 
     uint256 public EVENT_DURATION = 1 days;
 
@@ -95,7 +95,7 @@ contract Event is Ownable {
     }
 
     function pauseUnpauseEvent() public onlyOwner{
-        eventPaused = !eventPaused;
+        eventPlayable = !eventPlayable;
     }
 
 //Function to check if a miner has already been used
@@ -178,11 +178,10 @@ contract Event is Ownable {
     }
 
 //Returns what event is currently active
-    function activeEvent() public view returns (uint256 _id) {
-        uint256 id;
+    function activeEvent() public view returns (uint256) {
         for (uint256 i = 0; i < eventSize - 1; i++) {
             if (events[i].available) {
-                return id = i;
+                return i;
             }
         }
     }
@@ -212,7 +211,7 @@ contract Event is Ownable {
 
 //Play the gem event
     function gemPlay(uint256 _amount) public returns (bool) {
-        require(eventPaused, "Events are currently paused");
+        require(eventPlayable, "Events are currently paused");
         require(activeEvent() == 0, "Event isn't ongoing");
         require(!isMinerUsed(), 'A miner has already performed an action during this event');
         require(diamond.balanceOf(msg.sender) >= _amount, 'Insufficient DIAMOND balance');
@@ -231,7 +230,7 @@ contract Event is Ownable {
 
 //Play the dealer event
     function dealerStart(uint256 _amount) public returns (bool) {
-        require(eventPaused, "Events are currently paused");
+        require(eventPlayable, "Events are currently paused");
         require(activeEvent() == 1, "Event isn't ongoing");
         require(_amount > 0, 'Amount must be above zero');
         require(!isMinerUsed(_amount), "You don't have available miners");
@@ -250,7 +249,7 @@ contract Event is Ownable {
 
 //Send out an attack during an event
     function specialEventStart(uint256 _amount) public {
-        require(eventPaused, "Events are currently paused");
+        require(eventPlayable, "Events are currently paused");
         require(activeEvent() == 3 || activeEvent() == 4, "Event isn't ongoing");
         require(!isMinerUsed(_amount), "This miner has already performed an action during this event");
         setMinerOut(_amount);
