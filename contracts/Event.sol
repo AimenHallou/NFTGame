@@ -119,7 +119,7 @@ contract Event is Ownable {
         return false;
     }
 
-//Function to check if a miner has already been used
+    //Function to check if a miner has already been used
     function isPastMinerUsed() public view returns (bool) {
         if (lastPlayers[msg.sender] > 0) {
             return true;
@@ -127,7 +127,14 @@ contract Event is Ownable {
         return false;
     }
 
-//Checks if an amount of miners are able to be used
+    function isPastMinerUsed(address _player) public view returns (bool) {
+        if (lastPlayers[_player] > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    //Checks if an amount of miners are able to be used
     function isPastMinerUsed(uint256 _size) public view returns (bool) {
         uint256 totalStaked = mine.ownedStakesBalance(msg.sender);
         if (totalStaked < _size) {
@@ -140,7 +147,7 @@ contract Event is Ownable {
         return false;
     }
 
-//Check if a miner owns a lock
+    //Check if a miner owns a lock
     function isMinerProtected(address _player) public view returns (bool) {
         uint256 totalStaked = mine.ownedStakesBalance(_player);
         Mine.OwnedStakeInfo[] memory stakes = mine.batchedStakesOfOwner(_player, 0, totalStaked);
@@ -179,7 +186,7 @@ contract Event is Ownable {
 
 //Returns what event is currently active
     function activeEvent() public view returns (uint256) {
-        for (uint256 i = 0; i < eventSize - 1; i++) {
+        for (uint256 i = 0; i < eventSize; i++) {
             if (events[i].available) {
                 return i;
             }
@@ -247,7 +254,7 @@ contract Event is Ownable {
         }
     }
 
-//Send out an attack during an event
+    //Send out an attack during an event
     function specialEventStart(uint256 _amount) public {
         require(eventPlayable, "Events are currently paused");
         require(activeEvent() == 3 || activeEvent() == 4, "Event isn't ongoing");
@@ -255,11 +262,15 @@ contract Event is Ownable {
         setMinerOut(_amount);
     }
 
-//Reward attackers with diamonds
+    //Reward attackers with diamonds
     function attackMinersReward() public onlyOwner{
         require(pastEvent == 3 || pastEvent == 4, "Past event has to be an attackable event");
-        require(isPastMinerUsed(), "You haven't sent anyone out to attack");
-        diamond.mint(msg.sender, (vault.storedDiamond() / 99) * lastPlayers[msg.sender]);
+
+        for (uint256 i = 0; i < playersAddresses.length; i++) {
+            if (isPastMinerUsed(playersAddresses[i])) {   
+                diamond.mint(playersAddresses[i], (vault.storedDiamond() / 99) * lastPlayers[playersAddresses[i]]);
+            }
+        }
     }
 
 //Checks if player is already set out to be attacked
