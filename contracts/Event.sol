@@ -268,7 +268,7 @@ contract Event is Ownable {
 
         for (uint256 i = 0; i < playersAddresses.length; i++) {
             if (isPastMinerUsed(playersAddresses[i])) {   
-                diamond.mint(playersAddresses[i], (vault.storedDiamond() / 99) * lastPlayers[playersAddresses[i]]);
+                diamond.mint(playersAddresses[i], (vault.balanceOf(playersAddresses[i]) / 99) * lastPlayers[playersAddresses[i]]);
             }
         }
     }
@@ -283,13 +283,17 @@ contract Event is Ownable {
         }
     }
 
-//Attcking miners after special events
+ //Attcking miners after special events
     function attackedMiners() public onlyOwner {
         for (uint256 i = 0; i < miner.totalSupply(); i++) {
-            // Implement random feature
-            if (!playerExist(miner.ownerOf(i))) {
-                address temp = miner.ownerOf(i);
-                playersAttacked.push(temp);
+
+            try miner.ownerOf(i) returns (address a) {
+                // Implement random feature 
+                if (!playerExist(a)) {
+                    playersAttacked.push(a);
+                }
+            } catch (bytes memory /*lowLevelData*/) {
+               
             }
         }
         for (uint256 i = 0; i < playersAttacked.length; i++) {
