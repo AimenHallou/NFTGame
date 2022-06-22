@@ -71,7 +71,8 @@ contract Mine is Ownable {
     }
 
 //burn a lock 
-    function burnLock(uint256 _id) public onlyOwner {
+    function burnLock(uint256 _id) public {
+        require(msg.sender == eventAddress, "Only the event address can burn a lock");
         miner.burnLock(_id);
         delete stakes[_id];
     }
