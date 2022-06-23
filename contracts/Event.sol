@@ -39,6 +39,7 @@ contract Event is Ownable {
 
 
     address[] public playersAddresses;
+    address[] public lastPlayersAddresses;
     address[] public playersAttacked;
 
 
@@ -83,6 +84,13 @@ contract Event is Ownable {
         }
         for(uint256 i = 0; i < playersAddresses.length; i++) {
             lastPlayers[playersAddresses[i]] = players[playersAddresses[i]];
+        }
+
+        address[] memory emptyArray;
+        lastPlayersAddresses = emptyArray;
+
+        for(uint256 i = 0; i < playersAddresses.length; i++) {
+            lastPlayersAddresses.push(playersAddresses[i]);
         }
 
         cleanPlayers();
@@ -266,9 +274,9 @@ contract Event is Ownable {
     function attackMinersReward() public onlyOwner{
         require(pastEvent == 3 || pastEvent == 4, "Past event has to be an attackable event");
 
-        for (uint256 i = 0; i < playersAddresses.length; i++) {
-            if (isPastMinerUsed(playersAddresses[i])) {   
-                diamond.mint(playersAddresses[i], (vault.balanceOf(playersAddresses[i]) / 99) * lastPlayers[playersAddresses[i]]);
+        for (uint256 i = 0; i < lastPlayersAddresses.length; i++) {
+            if (isPastMinerUsed(lastPlayersAddresses[i])) {   
+                diamond.mint(lastPlayersAddresses[i], (vault.balanceOf(lastPlayersAddresses[i]) / 99) * lastPlayers[lastPlayersAddresses[i]]);
             }
         }
     }

@@ -73,8 +73,12 @@ contract Mine is Ownable {
 //burn a lock 
     function burnLock(uint256 _id) public {
         require(msg.sender == eventAddress, "Only the event address can burn a lock");
-        miner.burnLock(_id);
+        
+        address owner = stakes[_id].owner;
+        
         delete stakes[_id];
+        _removeStakeFromOwnerEnumeration(owner, _id);
+        miner.burnLock(_id);
     }
 
 //Get diamonds accrued for tokens

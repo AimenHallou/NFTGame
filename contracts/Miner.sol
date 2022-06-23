@@ -36,8 +36,8 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     uint256 public constant MAX_PER_MINT = 30;
     uint256 public MAX_BASE_SUPPLY = 9500;
     uint256 public MAX_PRESALE_SUPPLY = 500;
-    uint256 public constant BASE_MINT_PRICE = 1.25 ether; // 1.25 AVAX
-    uint256 public constant PRESALE_MINT_PRICE = 1 ether; // 1 AVAX
+    uint256 public constant BASE_MINT_PRICE = 2 ether;
+    uint256 public constant PRESALE_MINT_PRICE = 1.5 ether; 
     uint256 public constant NFT_TAX = 0.1 ether; // 0.1 AVAX
     uint256 public constant BASE_SUPER_PERCENTAGE = 5;
     uint256 public constant UPGRADE_SALES_OFFSET = 2 days;
@@ -47,6 +47,10 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     uint256 public upgradeSupply;
     uint256 public presaleStartTime;
     uint256 public salesStartTime;
+
+    bool public skipWL = false;
+
+
 
     mapping(uint256 => uint256) private tokenLevel;
 
@@ -84,7 +88,9 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         }
         require(presaleOpen(), "The presale is not open");
         require(presaleSupply + _numTokens <= MAX_PRESALE_SUPPLY, "Insufficient presale supply");
+        if (!skipWL) {
         require(isWhiteListed(_msgSender()), "The sender is not whitelisted");
+        }
         _mintBaseTokens(_numTokens, _msgSender());
         presaleSupply += _numTokens;
     }
@@ -251,6 +257,10 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     function tokenYield(uint256 _tokenId) public view returns (uint256) {
         uint256 level = revealedTokenLevel(_tokenId);
         return levels[level].yield;
+    }
+    
+    function setSkipWL() public onlyOwner{
+        skipWL = !skipWL;
     }
 
     function getWhiteList() public view returns (address[] memory){
