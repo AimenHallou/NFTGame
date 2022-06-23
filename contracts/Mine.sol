@@ -257,6 +257,10 @@ contract Mine is Ownable {
         eventAddress = _eventAddress;
     }
 
+    function setVaultAddress(address _vaultAddress) external onlyOwner {
+        vaultAddress = _vaultAddress;
+    }
+
     function batchedCooldownsOfOwner(
         address _owner,
         uint256 _offset,

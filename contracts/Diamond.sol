@@ -34,13 +34,17 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
         minerAddress = _minerAddress;
     }
 
+    function setVaultAddress(address _vaultAddress) external onlyOwner {
+        vaultAddress = _vaultAddress;
+    }
+
     function mint(address _to, uint256 _amount) external {
-        require(_msgSender() == mineAddress || _msgSender() == eventAddress, "Only the Mine contract can mint");
+        require(_msgSender() == mineAddress || _msgSender() == eventAddress, "Only the Mine or event contract can mint");
         _mint(_to, _amount);
     }
 
     function burn(address _from, uint256 _amount) external {
-        require(_msgSender() == minerAddress || _msgSender() == eventAddress, "Only the Miner contract can burn");
+        require(_msgSender() == minerAddress || _msgSender() == eventAddress, "Only the Miner or event contract can burn");
         _burn(_from, _amount);
     }
 

@@ -310,9 +310,7 @@ contract Event is Ownable {
                 burnLock(playersAttacked[i]);
             } 
             else {
-                if(vault.balanceOf(playersAttacked[i]) >= 20000000000000000000) {
-                    vault.burn(playersAttacked[i], 20000000000000000000);
-                }  
+                vault.burn(playersAttacked[i], vault.balanceOf(playersAttacked[i]) * 0.05);
             }
         }
         }
@@ -325,6 +323,7 @@ contract Event is Ownable {
         miner.mintLock(_numTokens, msg.sender);
     }
 
+//Generates random number 
     function random() internal returns (uint) {
         uint randomnumber = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, nonce))) % 100;
         nonce++;

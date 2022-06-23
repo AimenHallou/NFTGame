@@ -38,7 +38,7 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     uint256 public MAX_PRESALE_SUPPLY = 500;
     uint256 public constant BASE_MINT_PRICE = 2 ether;
     uint256 public constant PRESALE_MINT_PRICE = 1.5 ether; 
-    uint256 public constant NFT_TAX = 0.1 ether; // 0.1 AVAX
+    uint256 public constant NFT_TAX = 0.1 ether; 
     uint256 public constant BASE_SUPER_PERCENTAGE = 5;
     uint256 public constant UPGRADE_SALES_OFFSET = 2 days;
 
@@ -331,7 +331,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     function setMineAddress(address _mineAddress) public onlyOwner {
-        require(mineAddress == address(0), "Mine address already set");
         mineAddress = _mineAddress;
     }
 
