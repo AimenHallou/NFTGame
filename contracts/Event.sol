@@ -21,6 +21,7 @@ contract Event is Ownable {
     uint256 eventSize = 5;
     uint256 lockLV = 2;
     uint256 playerSize;
+    uint nonce = 0;
     bool public eventPlayable = true;
 
     uint256 public EVENT_DURATION = 1 days;
@@ -232,7 +233,7 @@ contract Event is Ownable {
         require(diamond.balanceOf(msg.sender) >= _amount, 'Insufficient DIAMOND balance');
         //FIX HERE
         //random chance
-        if (block.timestamp % 4 == 0) {
+        if (random() > 50) {
             diamond.mint(msg.sender, _amount*2);
             setMinerOut();
             return true;
@@ -252,7 +253,7 @@ contract Event is Ownable {
         require(diamond.balanceOf(msg.sender) >= events[activeEvent()].price, 'Insufficient DIAMOND balance');
         //FIX HERE
         diamond.burn(msg.sender, events[activeEvent()].price);
-        if (block.timestamp % 4 == 0) {
+        if (random() > 50) {
             diamond.mint(msg.sender, events[activeEvent()].price * 10);
             setMinerOut(_amount);
             return true;
@@ -273,7 +274,6 @@ contract Event is Ownable {
     //Reward attackers with diamonds
     function attackMinersReward() public onlyOwner{
         require(pastEvent == 3 || pastEvent == 4, "Past event has to be an attackable event");
-
         for (uint256 i = 0; i < lastPlayersAddresses.length; i++) {
             if (isPastMinerUsed(lastPlayersAddresses[i])) {   
                 diamond.mint(lastPlayersAddresses[i], (vault.balanceOf(lastPlayersAddresses[i]) / 99) * lastPlayers[lastPlayersAddresses[i]]);
@@ -304,6 +304,7 @@ contract Event is Ownable {
                
             }
         }
+        if (random()>50){
         for (uint256 i = 0; i < playersAttacked.length; i++) {
             if (isMinerProtected(playersAttacked[i])) {
                 burnLock(playersAttacked[i]);
@@ -314,11 +315,19 @@ contract Event is Ownable {
                 }  
             }
         }
+        }
+
     }
 
 //Buy a lock from the locksmith
     function mintLock(uint16 _numTokens) public {
         require(activeEvent() == 2, "Locks can only be minted during the Locksmith event");
         miner.mintLock(_numTokens, msg.sender);
+    }
+
+    function random() internal returns (uint) {
+        uint randomnumber = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, nonce))) % 100;
+        nonce++;
+        return randomnumber;
     }
 }
