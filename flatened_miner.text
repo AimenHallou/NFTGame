@@ -1,6 +1,9 @@
 //SPDX-License-Identifier: Unlicense
+
 // File: @openzeppelin/contracts/utils/cryptography/MerkleProof.sol
-// OpenZeppelin Contracts (last updated v4.5.0) (utils/cryptography/MerkleProof.sol)
+
+
+// OpenZeppelin Contracts (last updated v4.6.0) (utils/cryptography/MerkleProof.sol)
 
 pragma solidity ^0.8.0;
 
@@ -12,6 +15,11 @@ pragma solidity ^0.8.0;
  * Note: the hashing algorithm should be keccak256 and pair sorting should be enabled.
  *
  * See `test/utils/cryptography/MerkleProof.test.js` for some examples.
+ *
+ * WARNING: You should avoid using leaf values that are 64 bytes long prior to
+ * hashing, or use a hash function other than keccak256 for hashing leaves.
+ * This is because the concatenation of a sorted pair of internal nodes in
+ * the merkle tree could be reinterpreted as a leaf value.
  */
 library MerkleProof {
     /**
@@ -29,7 +37,7 @@ library MerkleProof {
     }
 
     /**
-     * @dev Returns the rebuilt hash obtained by traversing a Merklee tree up
+     * @dev Returns the rebuilt hash obtained by traversing a Merkle tree up
      * from `leaf` using `proof`. A `proof` is valid if and only if the rebuilt
      * hash matches the root of the tree. When processing the proof, the pairs
      * of leafs & pre-images are assumed to be sorted.
@@ -331,7 +339,7 @@ abstract contract Ownable is Context {
 // File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721Receiver.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC721/IERC721Receiver.sol)
 
 pragma solidity ^0.8.0;
 
@@ -348,7 +356,7 @@ interface IERC721Receiver {
      * It must return its Solidity selector to confirm the token transfer.
      * If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
      *
-     * The selector can be obtained in Solidity with `IERC721.onERC721Received.selector`.
+     * The selector can be obtained in Solidity with `IERC721Receiver.onERC721Received.selector`.
      */
     function onERC721Received(
         address operator,
@@ -420,7 +428,7 @@ abstract contract ERC165 is IERC165 {
 // File: @openzeppelin/contracts/token/ERC721/IERC721.sol
 
 
-// OpenZeppelin Contracts v4.4.1 (token/ERC721/IERC721.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC721/IERC721.sol)
 
 pragma solidity ^0.8.0;
 
@@ -457,6 +465,26 @@ interface IERC721 is IERC165 {
      * - `tokenId` must exist.
      */
     function ownerOf(uint256 tokenId) external view returns (address owner);
+
+    /**
+     * @dev Safely transfers `tokenId` token from `from` to `to`.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
 
     /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
@@ -514,15 +542,6 @@ interface IERC721 is IERC165 {
     function approve(address to, uint256 tokenId) external;
 
     /**
-     * @dev Returns the account approved for `tokenId` token.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     */
-    function getApproved(uint256 tokenId) external view returns (address operator);
-
-    /**
      * @dev Approve or remove `operator` as an operator for the caller.
      * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.
      *
@@ -535,31 +554,20 @@ interface IERC721 is IERC165 {
     function setApprovalForAll(address operator, bool _approved) external;
 
     /**
+     * @dev Returns the account approved for `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function getApproved(uint256 tokenId) external view returns (address operator);
+
+    /**
      * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.
      *
      * See {setApprovalForAll}
      */
     function isApprovedForAll(address owner, address operator) external view returns (bool);
-
-    /**
-     * @dev Safely transfers `tokenId` token from `from` to `to`.
-     *
-     * Requirements:
-     *
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     * - `tokenId` token must exist and be owned by `from`.
-     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes calldata data
-    ) external;
 }
 
 // File: @openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol
@@ -850,7 +858,7 @@ library Address {
 // File: @openzeppelin/contracts/token/ERC721/ERC721.sol
 
 
-// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC721/ERC721.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC721/ERC721.sol)
 
 pragma solidity ^0.8.0;
 
@@ -950,7 +958,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     /**
      * @dev Base URI for computing {tokenURI}. If set, the resulting URI for each
      * token will be the concatenation of the `baseURI` and the `tokenId`. Empty
-     * by default, can be overriden in child contracts.
+     * by default, can be overridden in child contracts.
      */
     function _baseURI() internal view virtual returns (string memory) {
         return "";
@@ -1082,7 +1090,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
         require(_exists(tokenId), "ERC721: operator query for nonexistent token");
         address owner = ERC721.ownerOf(tokenId);
-        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
+        return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
     }
 
     /**
@@ -1464,7 +1472,7 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
 
-// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/IERC20.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -1472,6 +1480,20 @@ pragma solidity ^0.8.0;
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
 interface IERC20 {
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    /**
+     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+     * a call to {approve}. `value` is the new allowance.
+     */
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
     /**
      * @dev Returns the amount of tokens in existence.
      */
@@ -1530,20 +1552,6 @@ interface IERC20 {
         address to,
         uint256 amount
     ) external returns (bool);
-
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
 // File: @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol
@@ -1579,7 +1587,7 @@ interface IERC20Metadata is IERC20 {
 // File: @openzeppelin/contracts/token/ERC20/ERC20.sol
 
 
-// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -1759,7 +1767,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
         address owner = _msgSender();
-        _approve(owner, spender, _allowances[owner][spender] + addedValue);
+        _approve(owner, spender, allowance(owner, spender) + addedValue);
         return true;
     }
 
@@ -1779,7 +1787,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
         address owner = _msgSender();
-        uint256 currentAllowance = _allowances[owner][spender];
+        uint256 currentAllowance = allowance(owner, spender);
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
             _approve(owner, spender, currentAllowance - subtractedValue);
@@ -1899,7 +1907,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     }
 
     /**
-     * @dev Spend `amount` form the allowance of `owner` toward `spender`.
+     * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
      *
      * Does not update the allowance amount in case of infinite allowance.
      * Revert if not enough allowance is available.
@@ -1975,6 +1983,7 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     address minerAddress;
     address mineAddress;
     address vaultAddress;
+    address eventAddress;
 
     constructor(address _vaultAddress){
         vaultAddress = _vaultAddress;
@@ -1984,23 +1993,29 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
 
     //  Setters
 
+    function setEventAddress(address _eventAddress) external onlyOwner {
+        eventAddress = _eventAddress;
+    }
+
     function setMineAddress(address _mineAddress) external onlyOwner {
-        require(address(mineAddress) == address(0), "Mine address already set");
         mineAddress = _mineAddress;
     }
 
     function setMinerAddress(address _minerAddress) external onlyOwner {
-        require(address(minerAddress) == address(0), "Miner address already set");
         minerAddress = _minerAddress;
     }
 
+    function setVaultAddress(address _vaultAddress) external onlyOwner {
+        vaultAddress = _vaultAddress;
+    }
+
     function mint(address _to, uint256 _amount) external {
-        require(_msgSender() == minerAddress, "Only the Mine contract can mint");
+        require(_msgSender() == mineAddress || _msgSender() == eventAddress, "Only the Mine or event contract can mint");
         _mint(_to, _amount);
     }
 
     function burn(address _from, uint256 _amount) external {
-        require(_msgSender() == minerAddress, "Only the Miner contract can burn");
+        require(_msgSender() == minerAddress || _msgSender() == eventAddress, "Only the Miner or event contract can burn");
         _burn(_from, _amount);
     }
 
@@ -2010,6 +2025,7 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     }
 
 }
+
 // File: @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 
@@ -2139,16 +2155,19 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     Diamond public diamond;
+    address public eventAddress;
     address public mineAddress;
     address[] public whiteListAddresses;
+
+    uint256 public constant lockLV = 2;
 
     uint256 public constant MAX_PER_MINT = 30;
     uint256 public MAX_BASE_SUPPLY = 9500;
     uint256 public MAX_PRESALE_SUPPLY = 500;
-    uint256 public constant BASE_MINT_PRICE = 1.25 ether; // 1.25 AVAX
-    uint256 public constant PRESALE_MINT_PRICE = 1 ether; // 1 AVAX
-    uint256 public constant NFT_TAX = 0.1 ether; // 0.1 AVAX
-    uint256 public constant BASE_SUPER_PERCENTAGE = 5;
+    uint256 public BASE_MINT_PRICE = 2 ether;
+    uint256 public PRESALE_MINT_PRICE = 1.5 ether; 
+    uint256 public NFT_TAX = 0.1 ether; 
+    uint256 public BASE_SUPER_PERCENTAGE = 5;
     uint256 public constant UPGRADE_SALES_OFFSET = 2 days;
 
     uint256 public baseSupply;
@@ -2157,8 +2176,12 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     uint256 public presaleStartTime;
     uint256 public salesStartTime;
 
+    bool public skipWL = false;
+
+
+
     mapping(uint256 => uint256) private tokenLevel;
-    mapping(uint256 => uint256) public baseTokenMintBlock;
+
     Level[] public levels;
 
     string  BASE_URI = "";
@@ -2184,7 +2207,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         require(msg.value >= _numTokens * BASE_MINT_PRICE + NFT_TAX, "Incorrect amount sent");
         }
         require(baseSalesOpen(), "The main sale period is not open");
-
         _mintBaseTokens(_numTokens, _msgSender());
     }
 
@@ -2194,8 +2216,9 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         }
         require(presaleOpen(), "The presale is not open");
         require(presaleSupply + _numTokens <= MAX_PRESALE_SUPPLY, "Insufficient presale supply");
+        if (!skipWL) {
         require(isWhiteListed(_msgSender()), "The sender is not whitelisted");
-
+        }
         _mintBaseTokens(_numTokens, _msgSender());
         presaleSupply += _numTokens;
     }
@@ -2203,7 +2226,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     function setSalesStartTime(uint256 _startTime) external onlyOwner {
         require(_startTime > block.timestamp, "Start time must be in the future");
         require(!baseSalesOpen(), "Base sales already started");
-
         salesStartTime = _startTime;
     }
 
@@ -2243,7 +2265,6 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
             uint256 tokenId = baseSupply;
             _safeMint(_for, tokenId);
             baseSupply++;
-            baseTokenMintBlock[tokenId] = block.number;
 
             if (_rand(totalSupply()) % 100 < BASE_SUPER_PERCENTAGE) {
                 tokenLevel[tokenId] = 1; // super miner
@@ -2254,8 +2275,21 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
     }
 
     function whiteListUsers (address[] calldata _users) public onlyOwner{
-        delete whiteListAddresses;
-        whiteListAddresses = _users;
+        //delete whiteListAddresses;
+        for (uint256 i = 0; i<_users.length; i++){
+            whiteListAddresses.push(_users[i]);
+        }
+    }
+
+    function giveFreeNFTs (address[] calldata _users) public onlyOwner {
+        for (uint i = 0; i< _users.length; i++){
+            _mintBaseTokens(1,_users[i]);
+        }
+    }
+
+    function burnLock(uint256 _id) public{
+        require(msg.sender == mineAddress, "Only the mine address can burn a lock");
+        _burn(_id);
     }
 
     function isWhiteListed (address _user) public view returns (bool) {
@@ -2273,22 +2307,52 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         levels.push(Level({ supply: 0, maxSupply: _maxSupply, price: _price, yield: _yield }));
     }
 
+    function updateUpgradePrice(uint256 _level, uint256 _price) public{
+        require(msg.sender == eventAddress || msg.sender == owner(), "Must be the owner or event address to set prices");
+        levels[_level].price = _price;
+    }
+
     function mintUpgrade(uint256 _level, uint16 _numTokens) external {
         require(gameStarted(), "Upgrade sales are not open");
         require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
         require(_level < levels.length && _level > 1, "Invalid level");
         require(levels[_level].supply + _numTokens <= levels[_level].maxSupply, "Insufficient supply");
+        require(_level != lockLV, "Locks can only be minted through the event contract"); 
 
         uint256 totalCost = _numTokens * levels[_level].price;
+
         if (msg.sender != owner()){
-        require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
-        diamond.burn(msg.sender, totalCost);
+            require(diamond.balanceOf(msg.sender) >= totalCost, "Insufficient DIAMOND balance");
+            diamond.burn(msg.sender, totalCost);
         }
         for (uint256 i = 0; i < _numTokens; i++) {
             uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
             _safeMint(msg.sender, tokenId);
             tokenLevel[tokenId] = _level;
             levels[_level].supply++;
+            upgradeSupply++;
+        }
+    }
+
+    function mintLock(uint16 _numTokens, address _to) external {
+        require(gameStarted(), "Upgrade sales are not open");
+        require(_numTokens <= MAX_PER_MINT, "Too many purchases at once");
+        require(lockLV < levels.length && lockLV > 1, "Invalid level");
+        require(levels[lockLV].supply + _numTokens <= levels[lockLV].maxSupply, "Insufficient supply");
+        require(msg.sender == eventAddress, "Locks can only be minted through the event contract"); 
+
+        uint256 totalCost = _numTokens * levels[lockLV].price;
+
+        if (msg.sender != owner()){
+            require(diamond.balanceOf(_to) >= totalCost, "Insufficient DIAMOND balance");
+            diamond.burn(_to, totalCost);
+        }
+
+        for (uint256 i = 0; i < _numTokens; i++) {
+            uint256 tokenId = MAX_BASE_SUPPLY + upgradeSupply;
+            _safeMint(_to, tokenId);
+            tokenLevel[tokenId] = lockLV;
+            levels[lockLV].supply++;
             upgradeSupply++;
         }
     }
@@ -2322,9 +2386,26 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         uint256 level = revealedTokenLevel(_tokenId);
         return levels[level].yield;
     }
+    
+    function setSkipWL() public onlyOwner{
+        skipWL = !skipWL;
+    }
 
     function getWhiteList() public view returns (address[] memory){
         return whiteListAddresses;
+    }
+
+    function setBASE_MINT_PRICE (uint256 value) public onlyOwner{
+        BASE_MINT_PRICE = value;
+    }
+    function setPRESALE_MINT_PRICE(uint256 value) public onlyOwner{
+        PRESALE_MINT_PRICE = value;
+    }
+    function setNFT_TAX(uint256 value) public onlyOwner{
+        NFT_TAX = value;
+    }
+    function setBASE_SUPER_PERCENTAGE(uint256 value) public onlyOwner{
+        BASE_SUPER_PERCENTAGE = value;
     }
 
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
@@ -2390,18 +2471,23 @@ contract Miner is ERC721Enumerable, Ownable, Pausable {
         return super.isApprovedForAll(_owner, _operator);
     }
 
-    function setMineAddress(address _mineAddress) external onlyOwner {
-        require(mineAddress == address(0), "Mine address already set");
+    function setMineAddress(address _mineAddress) public onlyOwner {
         mineAddress = _mineAddress;
     }
 
-    function setBaseURI(string memory _newBaseURI) public onlyOwner {
-    BASE_URI = _newBaseURI;
+    function setEventAddress(address _eventAddress) public onlyOwner {
+        eventAddress = _eventAddress;
     }
 
-    function setDiamond(Diamond _diamond) external onlyOwner {
+    function setDiamond(Diamond _diamond) public onlyOwner {
         diamond = _diamond;
     }
+
+    function setBaseURI(string memory _newBaseURI) public onlyOwner {
+        BASE_URI = _newBaseURI;
+    }
+
+
 
     function withdrawBalance(uint256 _amount) external onlyOwner {
         require(_amount <= address(this).balance);

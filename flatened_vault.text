@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: Unlicense
+
 // File: @openzeppelin/contracts/utils/math/SafeMath.sol
 
 
-// OpenZeppelin Contracts v4.4.1 (utils/math/SafeMath.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (utils/math/SafeMath.sol)
 
 pragma solidity ^0.8.0;
 
@@ -31,7 +32,7 @@ library SafeMath {
     }
 
     /**
-     * @dev Returns the substraction of two unsigned integers, with an overflow flag.
+     * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
      *
      * _Available since v3.4._
      */
@@ -655,7 +656,7 @@ library Address {
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
 
-// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/IERC20.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -663,6 +664,20 @@ pragma solidity ^0.8.0;
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
 interface IERC20 {
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    /**
+     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+     * a call to {approve}. `value` is the new allowance.
+     */
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
     /**
      * @dev Returns the amount of tokens in existence.
      */
@@ -721,20 +736,6 @@ interface IERC20 {
         address to,
         uint256 amount
     ) external returns (bool);
-
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
 // File: @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol
@@ -770,7 +771,7 @@ interface IERC20Metadata is IERC20 {
 // File: @openzeppelin/contracts/token/ERC20/ERC20.sol
 
 
-// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -950,7 +951,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
         address owner = _msgSender();
-        _approve(owner, spender, _allowances[owner][spender] + addedValue);
+        _approve(owner, spender, allowance(owner, spender) + addedValue);
         return true;
     }
 
@@ -970,7 +971,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
         address owner = _msgSender();
-        uint256 currentAllowance = _allowances[owner][spender];
+        uint256 currentAllowance = allowance(owner, spender);
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
             _approve(owner, spender, currentAllowance - subtractedValue);
@@ -1090,7 +1091,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     }
 
     /**
-     * @dev Spend `amount` form the allowance of `owner` toward `spender`.
+     * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
      *
      * Does not update the allowance amount in case of infinite allowance.
      * Revert if not enough allowance is available.
@@ -1166,6 +1167,7 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     address minerAddress;
     address mineAddress;
     address vaultAddress;
+    address eventAddress;
 
     constructor(address _vaultAddress){
         vaultAddress = _vaultAddress;
@@ -1175,23 +1177,29 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
 
     //  Setters
 
+    function setEventAddress(address _eventAddress) external onlyOwner {
+        eventAddress = _eventAddress;
+    }
+
     function setMineAddress(address _mineAddress) external onlyOwner {
-        require(address(mineAddress) == address(0), "Mine address already set");
         mineAddress = _mineAddress;
     }
 
     function setMinerAddress(address _minerAddress) external onlyOwner {
-        require(address(minerAddress) == address(0), "Miner address already set");
         minerAddress = _minerAddress;
     }
 
+    function setVaultAddress(address _vaultAddress) external onlyOwner {
+        vaultAddress = _vaultAddress;
+    }
+
     function mint(address _to, uint256 _amount) external {
-        require(_msgSender() == minerAddress, "Only the Mine contract can mint");
+        require(_msgSender() == mineAddress || _msgSender() == eventAddress, "Only the Mine or event contract can mint");
         _mint(_to, _amount);
     }
 
     function burn(address _from, uint256 _amount) external {
-        require(_msgSender() == minerAddress, "Only the Miner contract can burn");
+        require(_msgSender() == minerAddress || _msgSender() == eventAddress, "Only the Miner or event contract can burn");
         _burn(_from, _amount);
     }
 
@@ -1201,6 +1209,7 @@ contract Diamond is ERC20("Diamond", "DIAMOND"), Ownable{
     }
 
 }
+
 // File: @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 
@@ -1326,7 +1335,6 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable {
 
     function setDiamond(Diamond _diamond) external onlyOwner {
         require(address(diamond) == address(0), "Diamond contract already set");
-
         diamond = _diamond;
     }
 
@@ -1344,14 +1352,14 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable {
     }
 
     function quickUnstake(uint256 _share) public {
-        uint256 output = _unstakeOutput(_share).mul(100 - QUICK_UNSTAKE_PENALTY_PERCENT).div(100);
+        uint256 output = sharesToDiamonds(_share).mul(100 - QUICK_UNSTAKE_PENALTY_PERCENT).div(100);
         _burn(msg.sender, _share);
         diamond.transfer(msg.sender, output);
     }
 
     // argument specified in sDIAMOND
     function prepareDelayedUnstake(uint256 _share) public {
-        uint256 output = _unstakeOutput(_share);
+        uint256 output = sharesToDiamonds(_share);
         _burn(msg.sender, _share);
 
         unlockAmounts[msg.sender] += output;
@@ -1373,10 +1381,21 @@ contract Vault is ERC20("Staked Diamond", "sDIAMOND"), Ownable {
         balance = diamond.balanceOf(address(this)) - storedDiamond;
     }
 
-    function _unstakeOutput(uint256 _share) internal view returns (uint256 output) {
+
+
+    function sharesToDiamonds(uint256 _share) public view returns (uint256 output) {
         uint256 totalShares = totalSupply();
         output = _share.mul(
             diamondBalance()
         ).div(totalShares);
+    }
+
+    function diamondsToShares(uint256 _diamonds) public view returns (uint256 output) {
+        uint256 totalShares = totalSupply();
+        output = _diamonds.mul(totalShares).div(diamondBalance());
+    }
+
+    function burn(address _from, uint256 _amount) external {
+        _burn(_from, _amount);
     }
 }
